@@ -5,96 +5,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Comanda mancare</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
-  .topbar { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-  .topbar-left { display: flex; align-items: center; gap: 10px; }
-  .app-icon { width: 32px; height: 32px; background: #0f6e56; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
-  .app-title { font-size: 16px; font-weight: 600; }
-  .app-sub { font-size: 12px; color: #888; }
-  .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
-  .badge-open { background: #e1f5ee; color: #0f6e56; }
-  .badge-closed { background: #f0f0f0; color: #888; }
-  .container { max-width: 640px; margin: 0 auto; padding: 20px 16px; }
-  .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-  .card-title { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 14px; }
-  label { font-size: 13px; color: #555; display: block; margin-bottom: 5px; }
-  input[type=text], input[type=number] { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; }
-  input:focus { border-color: #0f6e56; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 14px; }
-  .mb10 { margin-bottom: 10px; }
-  .btn { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; border: none; transition: opacity 0.15s, background 0.15s; }
-  .btn:active { opacity: 0.8; }
-  .btn-green { background: #0f6e56; color: #fff; }
-  .btn-green:hover { background: #085041; }
-  .btn-outline { background: #fff; border: 1px solid #ddd; color: #333; }
-  .btn-outline:hover { background: #f5f5f5; }
-  .btn-red { background: #fff; border: 1px solid #f09595; color: #a32d2d; }
-  .btn-red:hover { background: #fcebeb; }
-  .btn-sm { padding: 5px 12px; font-size: 12px; }
-  .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-  .metric { background: #f8f8f8; border-radius: 8px; padding: 12px; text-align: center; }
-  .metric-val { font-size: 22px; font-weight: 600; color: #1a1a1a; }
-  .metric-lbl { font-size: 11px; color: #888; margin-top: 3px; }
-  .order-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
-  .order-row:last-child { border-bottom: none; }
-  .avatar { width: 34px; height: 34px; border-radius: 50%; background: #e1f5ee; color: #0f6e56; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
-  .order-info { flex: 1; min-width: 0; }
-  .order-name { font-size: 14px; font-weight: 500; }
-  .order-item { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .order-price { font-size: 14px; font-weight: 600; color: #1a1a1a; min-width: 55px; text-align: right; }
-  .paid-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
-  .paid-yes { background: #e1f5ee; color: #0f6e56; }
-  .paid-no { background: #f0f0f0; color: #888; }
-  .del-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 18px; line-height: 1; padding: 0 2px; }
-  .del-btn:hover { color: #e24b4a; }
-  .confirm-btn { font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; background: #fff; font-family: inherit; font-weight: 500; }
-  .confirm-btn:hover { background: #e1f5ee; border-color: #0f6e56; color: #0f6e56; }
-  .confirm-btn.confirmed { background: #e1f5ee; border-color: #0f6e56; color: #0f6e56; cursor: default; }
-  .empty { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
-  .divider { border: none; border-top: 1px solid #f0f0f0; margin: 14px 0; }
-  .info-box { background: #e1f5ee; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #085041; margin-bottom: 16px; }
-  .loading { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
-  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #ddd; border-top-color: #0f6e56; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .error-box { background: #fcebeb; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #a32d2d; margin-bottom: 16px; }
-  .section-owner { border: 2px solid #0f6e56; }
-  #view-login { display:none; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .login-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 16px; padding: 36px 32px; width: 100%; max-width: 360px; text-align: center; }
-  .login-icon { width: 56px; height: 56px; background: #0f6e56; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; margin: 0 auto 20px; }
-  .login-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-  .login-sub { font-size: 14px; color: #888; margin-bottom: 24px; }
-  .login-error { font-size: 13px; color: #a32d2d; background: #fcebeb; border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; display: none; }
-  .login-input-wrap { position: relative; margin-bottom: 14px; }
-  .login-input-wrap input { width: 100%; padding: 10px 40px 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.15s; }
-  .login-input-wrap input:focus { border-color: #0f6e56; }
-  .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #aaa; font-size: 16px; padding: 0; }
-  .toggle-pw:hover { color: #555; }
-  .owner-tag { font-size: 11px; background: #0f6e56; color: #fff; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
-  #view-new-order { display: none; }
-  #view-active { display: none; }
-  #view-closed { display: none; }
-  .restaurant-name { font-size: 20px; font-weight: 700; }
-  .opened-by { font-size: 13px; color: #888; margin-top: 2px; }
-  .summary-box { background: #f8f8f8; border-radius: 8px; padding: 16px; margin-top: 14px; }
-  .summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: #555; }
-  .summary-total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; padding-top: 10px; margin-top: 6px; border-top: 1px solid #e0e0e0; }
-
-  #view-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .login-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 16px; padding: 36px 32px; width: 100%; max-width: 360px; text-align: center; }
-  .login-icon { width: 56px; height: 56px; background: #0f6e56; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; margin: 0 auto 20px; }
-  .login-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-  .login-sub { font-size: 14px; color: #888; margin-bottom: 24px; }
-  .login-error { font-size: 13px; color: #a32d2d; background: #fcebeb; border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; display: none; }
-  .login-input-wrap { position: relative; margin-bottom: 14px; }
-  .login-input-wrap input { width: 100%; padding: 10px 40px 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.15s; }
-  .login-input-wrap input:focus { border-color: #0f6e56; }
-  .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #aaa; font-size: 16px; padding: 0; }
-  .toggle-pw:hover { color: #555; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+#view-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.login-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 16px; padding: 36px 32px; width: 100%; max-width: 360px; text-align: center; }
+.login-icon { width: 56px; height: 56px; background: #0f6e56; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; margin: 0 auto 20px; }
+.login-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.login-sub { font-size: 14px; color: #888; margin-bottom: 24px; }
+.login-error { font-size: 13px; color: #a32d2d; background: #fcebeb; border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; display: none; }
+.login-input-wrap { position: relative; margin-bottom: 14px; }
+.login-input-wrap input { width: 100%; padding: 10px 40px 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.15s; }
+.login-input-wrap input:focus { border-color: #0f6e56; }
+.toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #aaa; font-size: 16px; padding: 0; }
+.topbar { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.app-icon { width: 32px; height: 32px; background: #0f6e56; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; flex-shrink: 0; }
+.app-title { font-size: 15px; font-weight: 600; }
+.app-sub { font-size: 11px; color: #888; }
+.active-count { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; background: #e1f5ee; color: #0f6e56; }
+.container { max-width: 680px; margin: 0 auto; padding: 20px 16px; }
+label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
+.optional-tag { font-size: 11px; color: #aaa; font-weight: 400; margin-left: 3px; }
+input[type=text], input[type=number], input[type=url] { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; background: #fff; }
+input:focus { border-color: #0f6e56; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+.mb10 { margin-bottom: 10px; }
+.btn { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; border: none; transition: opacity 0.1s, background 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+.btn-green { background: #0f6e56; color: #fff; }
+.btn-green:hover { background: #085041; }
+.btn-outline { background: #fff; border: 1px solid #ddd; color: #333; }
+.btn-outline:hover { background: #f5f5f5; }
+.btn-red { background: #fff; border: 1px solid #f09595; color: #a32d2d; }
+.btn-red:hover { background: #fcebeb; }
+.btn-sm { padding: 6px 14px; font-size: 13px; }
+.actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.new-order-card { border: 2px dashed #c8e6de; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; background: #fafcfb; }
+.new-order-title { font-size: 13px; font-weight: 700; color: #0f6e56; margin-bottom: 14px; }
+.order-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+.order-card-header { padding: 14px 18px; display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #f0f0f0; gap: 10px; }
+.order-restaurant { font-size: 16px; font-weight: 700; }
+.order-meta { font-size: 12px; color: #888; margin-top: 3px; }
+.menu-link { font-size: 12px; color: #185fa5; text-decoration: none; display: inline-block; margin-top: 5px; }
+.menu-link:hover { text-decoration: underline; }
+.status-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; white-space: nowrap; flex-shrink: 0; margin-top: 3px; }
+.pill-open { background: #e1f5ee; color: #0f6e56; }
+.pill-closed { background: #f0f0f0; color: #888; }
+.order-card-body { padding: 14px 18px; }
+.order-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+.order-row:last-child { border-bottom: none; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: #e1f5ee; color: #0f6e56; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.order-info { flex: 1; min-width: 0; }
+.order-name { font-size: 13px; font-weight: 600; }
+.order-item-txt { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-price { font-size: 13px; font-weight: 700; min-width: 54px; text-align: right; }
+.del-btn { background: none; border: none; cursor: pointer; color: #ddd; font-size: 18px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
+.del-btn:hover { color: #e24b4a; }
+.confirm-btn { font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; background: #fff; font-family: inherit; font-weight: 500; white-space: nowrap; }
+.confirm-btn:hover { background: #e1f5ee; border-color: #0f6e56; color: #0f6e56; }
+.confirm-btn.confirmed { background: #e1f5ee; border-color: #9FE1CB; color: #0f6e56; cursor: default; }
+.metric { background: #f8f8f8; border-radius: 8px; padding: 10px; text-align: center; }
+.metric-val { font-size: 20px; font-weight: 700; }
+.metric-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+.add-form { background: #f8faf9; border: 1px solid #d4ede5; border-radius: 10px; padding: 14px; margin-top: 14px; }
+.add-form-title { font-size: 12px; font-weight: 700; color: #0f6e56; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.owner-section { border-top: 2px solid #0f6e56; padding: 14px 18px; background: #f8faf9; }
+.owner-label { font-size: 11px; font-weight: 700; color: #0f6e56; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: #555; }
+.summary-total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; padding-top: 10px; margin-top: 6px; border-top: 1px solid #e8e8e8; }
+.summary-box { background: #f8f8f8; border-radius: 8px; padding: 12px; margin-top: 12px; }
+.empty { text-align: center; padding: 20px; color: #bbb; font-size: 13px; }
+.loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+.spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #ddd; border-top-color: #0f6e56; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-box { background: #fcebeb; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #a32d2d; margin-bottom: 16px; }
+.saving-ind { font-size: 12px; color: #888; display: none; align-items: center; gap: 4px; }
+.saving-ind.on { display: inline-flex; }
 </style>
 </head>
 <body>
+
 <div id="view-login">
   <div class="login-card">
     <div class="login-icon">&#127829;</div>
@@ -103,434 +93,303 @@
     <div class="login-error" id="login-error">Parola incorecta. Incearca din nou.</div>
     <div class="login-input-wrap">
       <input type="password" id="inp-password" placeholder="Parola" onkeydown="if(event.key==='Enter') checkPassword()" />
-      <button class="toggle-pw" onclick="togglePwVisibility()" title="Arata/ascunde">&#128065;</button>
+      <button class="toggle-pw" onclick="togglePw()">&#128065;</button>
     </div>
     <button class="btn btn-green" style="width:100%" onclick="checkPassword()">Intra</button>
   </div>
 </div>
+
 <div id="main-app" style="display:none">
-
-
-  <div class="topbar-left">
-    <div class="app-icon">&#127829;</div>
-    <div>
-      <div class="app-title">Comanda mancare</div>
-      <div class="app-sub" id="topbar-sub">Se incarca...</div>
-    </div>
-  </div>
-  <span class="badge badge-closed" id="status-badge">&#9679; Inchis</span>
-</div>
-
-<div class="container">
-
-  <div id="loading-view" class="loading">
-    <span class="spinner"></span> Se incarca...
-  </div>
-
-  <div id="error-view" style="display:none">
-    <div class="error-box" id="error-msg">Eroare la incarcarea datelor.</div>
-    <button class="btn btn-outline" onclick="loadState()">Reincearca</button>
-  </div>
-
-  <!-- VIEW: nicio comanda activa -->
-  <div id="view-idle" style="display:none">
-    <div class="card">
-      <div class="card-title">Restaurant</div>
-      <div class="mb10">
-        <label>Numele restaurantului</label>
-        <input type="text" id="inp-restaurant" placeholder="ex: Pizza Hut, McDonald's..." />
-      </div>
-      <div class="mb10">
-        <label>Numele tau (cel care initiaza comanda)</label>
-        <input type="text" id="inp-owner" placeholder="ex: Razvan" />
-      </div>
-      <div class="actions">
-        <button class="btn btn-green" onclick="startOrder()">Deschide comanda</button>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="app-icon">&#127829;</div>
+      <div>
+        <div class="app-title">Comanda mancare</div>
+        <div class="app-sub" id="topbar-sub">Se incarca...</div>
       </div>
     </div>
+    <span class="active-count" id="active-count" style="display:none"></span>
   </div>
-
-  <!-- VIEW: comanda activa -->
-  <div id="view-active" style="display:none">
-    <div class="info-box" id="active-info"></div>
-
-    <div class="card">
-      <div class="card-title">Adauga comanda ta</div>
-      <div class="grid2">
-        <div>
-          <label>Numele tau</label>
-          <input type="text" id="inp-name" placeholder="ex: Ioana" />
+  <div class="container">
+    <div id="loading-view" class="loading"><span class="spinner"></span> Se incarca...</div>
+    <div id="error-view" style="display:none">
+      <div class="error-box" id="error-msg"></div>
+      <button class="btn btn-outline" onclick="loadState()">Reincearca</button>
+    </div>
+    <div id="main-view" style="display:none">
+      <div class="new-order-card">
+        <div class="new-order-title">+ Deschide comanda noua</div>
+        <div class="grid2">
+          <div><label>Restaurant</label><input type="text" id="inp-restaurant" placeholder="ex: Pizza Hut" /></div>
+          <div><label>Numele tau</label><input type="text" id="inp-owner" placeholder="ex: Razvan" /></div>
         </div>
-        <div>
-          <label>Pret (RON)</label>
-          <input type="number" id="inp-price" placeholder="ex: 35" min="0" step="1" />
+        <div class="mb10">
+          <label>Link meniu <span class="optional-tag">(optional)</span></label>
+          <input type="url" id="inp-menulink" placeholder="ex: https://pizzahut.ro/meniu" />
+        </div>
+        <div class="actions">
+          <button class="btn btn-green btn-sm" onclick="startOrder()">Deschide comanda</button>
+          <span class="saving-ind" id="saving-new"><span class="spinner" style="width:13px;height:13px;border-width:2px;margin-right:0"></span> Se salveaza...</span>
         </div>
       </div>
-      <div class="mb10">
-        <label>Ce vrei sa comandezi</label>
-        <input type="text" id="inp-item" placeholder="ex: Burger meniu mare" />
-      </div>
-      <div class="actions">
-        <button class="btn btn-green" onclick="addOrder()">Adauga</button>
-      </div>
-    </div>
-
-    <div class="card section-owner" id="owner-card" style="display:none">
-      <div class="card-title">Gestionare comanda <span class="owner-tag">Organizator</span></div>
-      <div id="orders-list-owner"></div>
-      <div class="grid3" id="totals-owner" style="display:none">
-        <div class="metric"><div class="metric-val" id="t-count">0</div><div class="metric-lbl">persoane</div></div>
-        <div class="metric"><div class="metric-val" id="t-total">0</div><div class="metric-lbl">total RON</div></div>
-        <div class="metric"><div class="metric-val" id="t-avg">0</div><div class="metric-lbl">medie / pers</div></div>
-      </div>
-      <hr class="divider">
-      <div class="actions">
-        <button class="btn btn-red" onclick="closeOrder()">Inchide comanda</button>
-      </div>
-    </div>
-
-    <div class="card" id="orders-card-public">
-      <div class="card-title">Comenzi curente</div>
-      <div id="orders-list-public"></div>
-      <div class="grid3" id="totals-public" style="display:none">
-        <div class="metric"><div class="metric-val" id="p-count">0</div><div class="metric-lbl">persoane</div></div>
-        <div class="metric"><div class="metric-val" id="p-total">0</div><div class="metric-lbl">total RON</div></div>
-        <div class="metric"><div class="metric-val" id="p-avg">0</div><div class="metric-lbl">medie / pers</div></div>
-      </div>
+      <div id="orders-container"></div>
     </div>
   </div>
-
-  <!-- VIEW: comanda inchisa -->
-  <div id="view-closed" style="display:none">
-    <div class="card">
-      <div class="restaurant-name" id="closed-restaurant"></div>
-      <div class="opened-by" id="closed-by"></div>
-      <div class="summary-box">
-        <div id="closed-orders-list"></div>
-        <div class="summary-total">
-          <span>Total</span>
-          <span id="closed-total"></span>
-        </div>
-      </div>
-    </div>
-    <div class="card section-owner" id="owner-payment-card" style="display:none">
-      <div class="card-title">Confirmare plati <span class="owner-tag">Organizator</span></div>
-      <div id="payment-list"></div>
-      <hr class="divider">
-      <div class="actions">
-        <button class="btn btn-outline" onclick="resetOrder()">Comanda noua</button>
-      </div>
-    </div>
-    <div style="text-align:center; margin-top: 10px;" id="public-reset-btn" style="display:none">
-      <button class="btn btn-outline" onclick="loadState()">Reincarca</button>
-    </div>
-  </div>
-
 </div>
 
 <script>
 const MASTER_KEY = '$2a$10$2kMm5ORo2rd3sv6H7Sh70unZ0dvp.kRY8LkLTrx4mzmRRsAu0TYLa';
-const BIN_NAME = 'foodorder-ppc';
-let binId = '69ce325d36566621a870d3ef';
-let isOwner = false;
-let ownerName = '';
-let pollInterval = null;
-let lastHash = '';
+const BIN_ID = '69ce325d36566621a870d3ef';
+const APP_PASSWORD = 'Mancare2025!';
 
-async function apiFetch(url, method='GET', body=null) {
-  const opts = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Master-Key': MASTER_KEY,
-      'X-Bin-Versioning': 'false'
-    }
-  };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(url, opts);
-  if (!res.ok) throw new Error('API error ' + res.status);
-  return res.json();
+let localState = null;
+let lastHash = '';
+let pollInterval = null;
+let saving = {};
+let myName = localStorage.getItem('fo_name') || '';
+let ownedIds = JSON.parse(localStorage.getItem('fo_owned') || '[]');
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) loadState();
+});
+
+async function api(url, method, body) {
+  const r = await fetch(url, {
+    method: method || 'GET',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Bin-Versioning': 'false' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
 }
 
 async function getState() {
-  if (!binId) return null;
-  const data = await apiFetch(`https://api.jsonbin.io/v3/b/${binId}/latest`);
-  return data.record;
+  const d = await api(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`);
+  localState = d.record || { sessions: [] };
+  return localState;
 }
 
-async function setState(state) {
-  if (!binId) {
-    const data = await apiFetch('https://api.jsonbin.io/v3/b', 'POST', state);
-    binId = data.metadata.id;
-    
-    return;
-  }
-  await apiFetch(`https://api.jsonbin.io/v3/b/${binId}`, 'PUT', state);
-}
-
-function emptyState() {
-  return { status: 'idle', restaurant: '', openedBy: '', orders: [], openedAt: null };
+async function putState(s) {
+  localState = s;
+  await api(`https://api.jsonbin.io/v3/b/${BIN_ID}`, 'PUT', s);
 }
 
 async function loadState() {
-  showView('loading');
+  if (!localState) { showEl('loading-view', true); showEl('main-view', false); showEl('error-view', false); }
   try {
-    let state = await getState();
-    if (!state) state = emptyState();
-    renderState(state);
+    await getState();
+    render();
+    showEl('loading-view', false); showEl('main-view', true); showEl('error-view', false);
+    poll();
   } catch(e) {
-    showView('error');
-    document.getElementById('error-msg').textContent = 'Eroare la incarcarea datelor. Verifica conexiunea.';
+    if (!localState) { showEl('loading-view', false); showEl('error-view', true); document.getElementById('error-msg').textContent = 'Eroare la incarcare. Verifica conexiunea.'; }
   }
 }
 
-function renderState(state) {
-  const hash = JSON.stringify(state);
+function render() {
+  const hash = JSON.stringify(localState);
   if (hash === lastHash) return;
   lastHash = hash;
+  const sessions = (localState.sessions || []);
+  const openN = sessions.filter(s => s.status === 'open').length;
+  document.getElementById('topbar-sub').textContent = openN ? openN + ' comand' + (openN===1?'a':'i') + ' active' : 'Nicio comanda activa';
+  const ac = document.getElementById('active-count');
+  ac.style.display = openN ? 'inline-block' : 'none';
+  ac.textContent = openN + ' active';
 
-  stopPolling();
+  // Prefill owner name
+  const ownerInp = document.getElementById('inp-owner');
+  if (ownerInp && !ownerInp.value && myName) ownerInp.value = myName;
 
-  if (state.status === 'idle') {
-    showView('idle');
-    document.getElementById('topbar-sub').textContent = 'Nicio comanda activa';
-    document.getElementById('status-badge').textContent = '\u25CF Inchis';
-    document.getElementById('status-badge').className = 'badge badge-closed';
-
-  } else if (state.status === 'open') {
-    showView('active');
-    document.getElementById('topbar-sub').textContent = state.restaurant;
-    document.getElementById('status-badge').textContent = '\u25CF Deschis';
-    document.getElementById('status-badge').className = 'badge badge-open';
-    document.getElementById('active-info').textContent =
-      'Comanda deschisa la ' + state.restaurant + ' de ' + state.openedBy + '. Adauga comanda ta mai jos.';
-
-    const ownerCard = document.getElementById('owner-card');
-    const publicCard = document.getElementById('orders-card-public');
-
-    if (isOwner && ownerName === state.openedBy) {
-      ownerCard.style.display = 'block';
-      publicCard.style.display = 'none';
-      renderOrdersOwner(state);
-    } else {
-      ownerCard.style.display = 'none';
-      publicCard.style.display = 'block';
-      renderOrdersPublic(state);
-    }
-    startPolling();
-
-  } else if (state.status === 'closed') {
-    showView('closed');
-    document.getElementById('topbar-sub').textContent = state.restaurant + ' — inchis';
-    document.getElementById('status-badge').textContent = '\u25CF Inchis';
-    document.getElementById('status-badge').className = 'badge badge-closed';
-    document.getElementById('closed-restaurant').textContent = state.restaurant;
-    document.getElementById('closed-by').textContent = 'Organizat de ' + state.openedBy;
-    renderClosedOrders(state);
-
-    if (isOwner && ownerName === state.openedBy) {
-      document.getElementById('owner-payment-card').style.display = 'block';
-      document.getElementById('public-reset-btn').style.display = 'none';
-      renderPaymentList(state);
-    } else {
-      document.getElementById('owner-payment-card').style.display = 'none';
-      document.getElementById('public-reset-btn').style.display = 'block';
-    }
-    startPolling();
-  }
+  const sorted = [...sessions].sort((a,b) => {
+    if (a.status !== b.status) return a.status === 'open' ? -1 : 1;
+    return new Date(b.openedAt) - new Date(a.openedAt);
+  });
+  const c = document.getElementById('orders-container');
+  c.innerHTML = '';
+  if (!sorted.length) { c.innerHTML = '<div class="empty" style="padding:30px 0">Nicio comanda deschisa. Fii primul!</div>'; return; }
+  sorted.forEach(s => c.appendChild(makeCard(s)));
 }
 
-function renderOrdersOwner(state) {
-  const list = document.getElementById('orders-list-owner');
-  const totals = document.getElementById('totals-owner');
-  if (!state.orders || state.orders.length === 0) {
-    list.innerHTML = '<div class="empty">Nicio comanda inca.</div>';
-    totals.style.display = 'none';
-    return;
-  }
-  totals.style.display = 'grid';
-  list.innerHTML = state.orders.map(o => `
-    <div class="order-row">
-      <div class="avatar">${initials(o.name)}</div>
-      <div class="order-info">
-        <div class="order-name">${o.name}</div>
-        <div class="order-item">${o.item}</div>
-      </div>
-      <div class="order-price">${o.price} RON</div>
-      <button class="del-btn" onclick="deleteOrder('${o.id}')" title="Sterge">&#215;</button>
-    </div>`).join('');
-  updateTotals(state.orders, 't-count', 't-total', 't-avg');
-}
-
-function renderOrdersPublic(state) {
-  const list = document.getElementById('orders-list-public');
-  const totals = document.getElementById('totals-public');
-  if (!state.orders || state.orders.length === 0) {
-    list.innerHTML = '<div class="empty">Nicio comanda inca. Fii primul!</div>';
-    totals.style.display = 'none';
-    return;
-  }
-  totals.style.display = 'grid';
-  list.innerHTML = state.orders.map(o => `
-    <div class="order-row">
-      <div class="avatar">${initials(o.name)}</div>
-      <div class="order-info">
-        <div class="order-name">${o.name}</div>
-        <div class="order-item">${o.item}</div>
-      </div>
-      <div class="order-price">${o.price} RON</div>
-    </div>`).join('');
-  updateTotals(state.orders, 'p-count', 'p-total', 'p-avg');
-}
-
-function renderClosedOrders(state) {
-  const list = document.getElementById('closed-orders-list');
-  const total = (state.orders||[]).reduce((s,o) => s + parseFloat(o.price||0), 0);
-  list.innerHTML = (state.orders||[]).map(o => `
-    <div class="summary-row">
-      <span>${o.name} — ${o.item}</span>
-      <span>${o.price} RON</span>
-    </div>`).join('');
-  document.getElementById('closed-total').textContent = total.toFixed(0) + ' RON';
-}
-
-function renderPaymentList(state) {
-  const list = document.getElementById('payment-list');
-  if (!state.orders || state.orders.length === 0) {
-    list.innerHTML = '<div class="empty">Nicio comanda.</div>';
-    return;
-  }
-  list.innerHTML = state.orders.map(o => `
-    <div class="order-row">
-      <div class="avatar">${initials(o.name)}</div>
-      <div class="order-info">
-        <div class="order-name">${o.name}</div>
-        <div class="order-item">${o.item} — ${o.price} RON</div>
-      </div>
-      <button class="confirm-btn ${o.paid ? 'confirmed' : ''}" onclick="togglePaid('${o.id}')" ${o.paid ? 'disabled' : ''}>
-        ${o.paid ? '&#10003; Platit' : 'Confirma plata'}
-      </button>
-    </div>`).join('');
-}
-
-function updateTotals(orders, cId, tId, aId) {
+function makeCard(session) {
+  const owned = ownedIds.includes(session.id);
+  const open = session.status === 'open';
+  const orders = session.orders || [];
   const total = orders.reduce((s,o) => s + parseFloat(o.price||0), 0);
-  document.getElementById(cId).textContent = orders.length;
-  document.getElementById(tId).textContent = total.toFixed(0);
-  document.getElementById(aId).textContent = (total / orders.length).toFixed(0);
-}
 
-function initials(name) {
-  return (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const div = document.createElement('div');
+  div.className = 'order-card';
+
+  const menuHtml = session.menuLink
+    ? `<a href="${esc(session.menuLink)}" target="_blank" class="menu-link">&#128279; Vezi meniu</a>` : '';
+
+  let orderRowsHtml = orders.length ? orders.map(o => `
+    <div class="order-row">
+      <div class="avatar">${ini(o.name)}</div>
+      <div class="order-info"><div class="order-name">${esc(o.name)}</div><div class="order-item-txt">${esc(o.item)}</div></div>
+      <div class="order-price">${o.price} RON</div>
+      ${owned && open ? `<button class="del-btn" onclick="delOrder('${session.id}','${o.id}')">&#215;</button>` : ''}
+    </div>`).join('') : '<div class="empty">Nicio comanda inca.</div>';
+
+  const metricsHtml = orders.length ? `<div class="grid3">
+    <div class="metric"><div class="metric-val">${orders.length}</div><div class="metric-lbl">persoane</div></div>
+    <div class="metric"><div class="metric-val">${total.toFixed(0)}</div><div class="metric-lbl">total RON</div></div>
+    <div class="metric"><div class="metric-val">${(total/orders.length).toFixed(0)}</div><div class="metric-lbl">medie/pers</div></div>
+  </div>` : '';
+
+  const addFormHtml = open ? `<div class="add-form">
+    <div class="add-form-title">Adauga comanda ta</div>
+    <div class="grid2">
+      <div><label>Numele tau</label><input type="text" id="n-${session.id}" placeholder="ex: Ioana" value="${esc(myName)}" oninput="saveName(this.value)" /></div>
+      <div><label>Pret (RON)</label><input type="number" id="p-${session.id}" placeholder="ex: 35" min="0" step="1" /></div>
+    </div>
+    <div class="mb10"><label>Ce vrei sa comandezi</label>
+      <input type="text" id="i-${session.id}" placeholder="ex: Burger meniu mare" onkeydown="if(event.key==='Enter')addOrder('${session.id}')" />
+    </div>
+    <div class="actions">
+      <button class="btn btn-green btn-sm" onclick="addOrder('${session.id}')">Adauga</button>
+      <span class="saving-ind" id="saving-${session.id}"><span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:0"></span> Se salveaza...</span>
+    </div>
+  </div>` : '';
+
+  let ownerHtml = '';
+  if (owned) {
+    if (open) {
+      ownerHtml = `<div class="owner-section">
+        <div class="owner-label">&#9679; Organizator</div>
+        <button class="btn btn-red btn-sm" onclick="closeSession('${session.id}')">Inchide comanda</button>
+      </div>`;
+    } else {
+      const payRows = orders.map(o => `<div class="order-row">
+        <div class="avatar">${ini(o.name)}</div>
+        <div class="order-info"><div class="order-name">${esc(o.name)}</div><div class="order-item-txt">${esc(o.item)} &middot; ${o.price} RON</div></div>
+        <button class="confirm-btn ${o.paid?'confirmed':''}" onclick="togglePaid('${session.id}','${o.id}')" ${o.paid?'disabled':''}>
+          ${o.paid?'&#10003; Platit':'Confirma plata'}
+        </button>
+      </div>`).join('');
+      const sumRows = orders.map(o => `<div class="summary-row"><span>${esc(o.name)} — ${esc(o.item)}</span><span>${o.price} RON</span></div>`).join('');
+      ownerHtml = `<div class="owner-section">
+        <div class="owner-label">&#9679; Confirmare plati</div>
+        ${payRows}
+        <div class="summary-box">${sumRows}<div class="summary-total"><span>Total</span><span>${total.toFixed(0)} RON</span></div></div>
+        <div class="actions"><button class="btn btn-outline btn-sm" onclick="removeSession('${session.id}')">Arhiveaza / Sterge</button></div>
+      </div>`;
+    }
+  }
+
+  div.innerHTML = `
+    <div class="order-card-header">
+      <div><div class="order-restaurant">${esc(session.restaurant)}</div>
+        <div class="order-meta">Deschis de ${esc(session.openedBy)} &middot; ${fmtTime(session.openedAt)}</div>
+        ${menuHtml}
+      </div>
+      <span class="status-pill ${open?'pill-open':'pill-closed'}">${open?'&#9679; Deschis':'&#9679; Inchis'}</span>
+    </div>
+    <div class="order-card-body">${orderRowsHtml}${metricsHtml}${addFormHtml}</div>
+    ${ownerHtml}`;
+  return div;
 }
 
 async function startOrder() {
-  const restaurant = document.getElementById('inp-restaurant').value.trim();
-  const owner = document.getElementById('inp-owner').value.trim();
-  if (!restaurant || !owner) { alert('Completeaza restaurantul si numele tau.'); return; }
-  isOwner = true;
-  ownerName = owner;
-  localStorage.setItem('foodorder_owner', owner);
-  const state = { status: 'open', restaurant, openedBy: owner, openedAt: new Date().toISOString(), orders: [] };
-  try {
-    await setState(state);
-    renderState(state);
-  } catch(e) { alert('Eroare la salvare. Incearca din nou.'); }
+  const rest = document.getElementById('inp-restaurant').value.trim();
+  const own = document.getElementById('inp-owner').value.trim();
+  const link = document.getElementById('inp-menulink').value.trim();
+  if (!rest || !own) { alert('Completeaza restaurantul si numele tau.'); return; }
+  if (saving['new']) return;
+  saving['new'] = true; setSaving('new', true);
+  saveName(own);
+  const sid = Date.now().toString();
+  const st = localState || { sessions: [] };
+  st.sessions = st.sessions || [];
+  st.sessions.push({ id: sid, restaurant: rest, openedBy: own, menuLink: link || null, openedAt: new Date().toISOString(), status: 'open', orders: [] });
+  ownedIds.push(sid);
+  localStorage.setItem('fo_owned', JSON.stringify(ownedIds));
+  document.getElementById('inp-restaurant').value = '';
+  document.getElementById('inp-menulink').value = '';
+  lastHash = ''; render();
+  try { await putState(st); } catch(e) { alert('Eroare la salvare.'); }
+  setSaving('new', false); saving['new'] = false;
 }
 
-async function addOrder() {
-  const name = document.getElementById('inp-name').value.trim();
-  const item = document.getElementById('inp-item').value.trim();
-  const price = parseFloat(document.getElementById('inp-price').value);
-  if (!name || !item || isNaN(price) || price < 0) { alert('Completeaza toate campurile.'); return; }
-  try {
-    let state = await getState();
-    if (!state || state.status !== 'open') { alert('Comanda nu mai este activa.'); loadState(); return; }
-    state.orders = state.orders || [];
-    state.orders.push({ id: Date.now().toString(), name, item, price: price.toFixed(0), paid: false });
-    await setState(state);
-    document.getElementById('inp-name').value = '';
-    document.getElementById('inp-item').value = '';
-    document.getElementById('inp-price').value = '';
-    lastHash = '';
-    renderState(state);
-  } catch(e) { alert('Eroare la salvare. Incearca din nou.'); }
+async function addOrder(sid) {
+  const n = document.getElementById('n-'+sid)?.value.trim();
+  const it = document.getElementById('i-'+sid)?.value.trim();
+  const pr = parseFloat(document.getElementById('p-'+sid)?.value);
+  if (!n || !it || isNaN(pr) || pr < 0) { alert('Completeaza toate campurile.'); return; }
+  if (saving[sid]) return;
+  saving[sid] = true; setSaving(sid, true);
+  saveName(n);
+  const st = localState || await getState();
+  const ses = st.sessions.find(s => s.id === sid);
+  if (!ses || ses.status !== 'open') { alert('Comanda nu mai este activa.'); loadState(); saving[sid]=false; return; }
+  ses.orders = ses.orders || [];
+  ses.orders.push({ id: Date.now().toString(), name: n, item: it, price: pr.toFixed(0), paid: false });
+  document.getElementById('i-'+sid).value = '';
+  document.getElementById('p-'+sid).value = '';
+  lastHash = ''; render();
+  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  setSaving(sid, false); saving[sid] = false;
 }
 
-async function deleteOrder(id) {
+async function delOrder(sid, oid) {
   if (!confirm('Stergi aceasta comanda?')) return;
-  try {
-    let state = await getState();
-    state.orders = (state.orders||[]).filter(o => o.id !== id);
-    await setState(state);
-    lastHash = '';
-    renderState(state);
-  } catch(e) { alert('Eroare. Incearca din nou.'); }
+  if (saving[sid]) return;
+  saving[sid] = true;
+  const st = localState || await getState();
+  const ses = st.sessions.find(s => s.id === sid);
+  if (ses) ses.orders = ses.orders.filter(o => o.id !== oid);
+  lastHash = ''; render();
+  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  saving[sid] = false;
 }
 
-async function closeOrder() {
+async function closeSession(sid) {
   if (!confirm('Inchizi comanda? Colegii nu mai pot adauga comenzi.')) return;
-  try {
-    let state = await getState();
-    state.status = 'closed';
-    await setState(state);
-    lastHash = '';
-    renderState(state);
-  } catch(e) { alert('Eroare. Incearca din nou.'); }
+  if (saving[sid]) return;
+  saving[sid] = true;
+  const st = localState || await getState();
+  const ses = st.sessions.find(s => s.id === sid);
+  if (ses) ses.status = 'closed';
+  lastHash = ''; render();
+  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  saving[sid] = false;
 }
 
-async function togglePaid(id) {
-  try {
-    let state = await getState();
-    const order = state.orders.find(o => o.id === id);
-    if (order) order.paid = true;
-    await setState(state);
-    lastHash = '';
-    renderState(state);
-  } catch(e) { alert('Eroare. Incearca din nou.'); }
+async function togglePaid(sid, oid) {
+  if (saving[sid]) return;
+  saving[sid] = true;
+  const st = localState || await getState();
+  const ses = st.sessions.find(s => s.id === sid);
+  if (ses) { const o = ses.orders.find(o => o.id === oid); if (o) o.paid = true; }
+  lastHash = ''; render();
+  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  saving[sid] = false;
 }
 
-async function resetOrder() {
-  if (!confirm('Resetezi? Toate datele comenzii curente vor fi sterse.')) return;
-  isOwner = false;
-  ownerName = '';
-  localStorage.removeItem('foodorder_owner');
-  const state = emptyState();
-  try {
-    await setState(state);
-    lastHash = '';
-    renderState(state);
-  } catch(e) { alert('Eroare. Incearca din nou.'); }
+async function removeSession(sid) {
+  if (!confirm('Arhivezi si stergi aceasta comanda? Nu va mai fi vizibila.')) return;
+  if (saving[sid]) return;
+  saving[sid] = true;
+  const st = localState || await getState();
+  st.sessions = st.sessions.filter(s => s.id !== sid);
+  ownedIds = ownedIds.filter(id => id !== sid);
+  localStorage.setItem('fo_owned', JSON.stringify(ownedIds));
+  lastHash = ''; render();
+  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  saving[sid] = false;
 }
 
-function showView(v) {
-  document.getElementById('loading-view').style.display = v === 'loading' ? 'block' : 'none';
-  document.getElementById('error-view').style.display = v === 'error' ? 'block' : 'none';
-  document.getElementById('view-idle').style.display = v === 'idle' ? 'block' : 'none';
-  document.getElementById('view-active').style.display = v === 'active' ? 'block' : 'none';
-  document.getElementById('view-closed').style.display = v === 'closed' ? 'block' : 'none';
-}
+function saveName(n) { if (n) { myName = n; localStorage.setItem('fo_name', n); } }
+function setSaving(id, on) { const el = document.getElementById('saving-'+id); if (el) el.className = 'saving-ind' + (on?' on':''); }
+function ini(name) { return (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtTime(iso) { if (!iso) return ''; const d = new Date(iso); return d.toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'}); }
+function showEl(id, on) { document.getElementById(id).style.display = on ? 'block' : 'none'; }
+function poll() { if (pollInterval) return; pollInterval = setInterval(async () => { if (document.hidden) return; try { await getState(); render(); } catch(e){} }, 6000); }
 
-function startPolling() {
-  if (pollInterval) return;
-  pollInterval = setInterval(async () => {
-    try {
-      const state = await getState();
-      if (state) renderState(state);
-    } catch(e) {}
-  }, 5000);
-}
-
-function stopPolling() {
-  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-}
-
-
-const APP_PASSWORD = 'Mancare2025!';
 function checkPassword() {
-  const val = document.getElementById('inp-password').value;
-  if (val === APP_PASSWORD) {
-    sessionStorage.setItem('foodorder_auth', '1');
+  if (document.getElementById('inp-password').value === APP_PASSWORD) {
+    sessionStorage.setItem('fo_auth','1');
     document.getElementById('view-login').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     loadState();
@@ -540,13 +399,9 @@ function checkPassword() {
     document.getElementById('inp-password').focus();
   }
 }
-function togglePwVisibility() {
-  const inp = document.getElementById('inp-password');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
-}
-const savedOwner = localStorage.getItem('foodorder_owner');
-if (savedOwner) { isOwner = true; ownerName = savedOwner; }
-if (sessionStorage.getItem('foodorder_auth') === '1') {
+function togglePw() { const i = document.getElementById('inp-password'); i.type = i.type==='password'?'text':'password'; }
+
+if (sessionStorage.getItem('fo_auth') === '1') {
   document.getElementById('view-login').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
   loadState();
@@ -554,6 +409,5 @@ if (sessionStorage.getItem('foodorder_auth') === '1') {
   document.getElementById('view-login').style.display = 'flex';
 }
 </script>
-</div>
 </body>
 </html>
