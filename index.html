@@ -145,7 +145,7 @@ input:disabled { background: #f5f5f5; color: #aaa; }
 </div>
 
 <script>
-const MASTER_KEY = '$2a$10$hFOM1sJSyxWkjBpAGjynu.Fb2jzJ7TkUM8jDJB6BJGqWc2MGbC8bC';
+const ACCESS_KEY = '$2a$10$hFOM1sJSyxWkjBpAGjynu.Fb2jzJ7TkUM8jDJB6BJGqWc2MGbC8bC';
 const BIN_ID = '69ce325d36566621a870d3ef';
 const APP_PASSWORD = 'Mancare2025!';
 
@@ -166,7 +166,7 @@ document.addEventListener('visibilitychange', () => {
 async function api(url, method, body) {
   const r = await fetch(url, {
     method: method || 'GET',
-    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Bin-Versioning': 'false' },
+    headers: { 'Content-Type': 'application/json', 'X-Access-Key': ACCESS_KEY, 'X-Bin-Versioning': 'false' },
     body: body ? JSON.stringify(body) : undefined
   });
   if (!r.ok) throw new Error(r.status);
