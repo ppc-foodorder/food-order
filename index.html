@@ -231,7 +231,7 @@
 <script>
 const MASTER_KEY = '$2a$10$2kMm5ORo2rd3sv6H7Sh70unZ0dvp.kRY8LkLTrx4mzmRRsAu0TYLa';
 const BIN_NAME = 'foodorder-ppc';
-let binId = localStorage.getItem('foodorder_bin_id') || null;
+let binId = '69ce325d36566621a870d3ef';
 let isOwner = false;
 let ownerName = '';
 let pollInterval = null;
@@ -262,7 +262,7 @@ async function setState(state) {
   if (!binId) {
     const data = await apiFetch('https://api.jsonbin.io/v3/b', 'POST', state);
     binId = data.metadata.id;
-    localStorage.setItem('foodorder_bin_id', binId);
+    
     return;
   }
   await apiFetch(`https://api.jsonbin.io/v3/b/${binId}`, 'PUT', state);
