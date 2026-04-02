@@ -33,7 +33,9 @@ input:focus { border-color: #0f6e56; }
 .mb10 { margin-bottom: 10px; }
 .btn { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; border: none; transition: opacity 0.1s, background 0.15s; display: inline-flex; align-items: center; gap: 5px; }
 .btn-green { background: #0f6e56; color: #fff; }
-.btn-green:hover { background: #085041; }
+.btn-green:hover:not(:disabled) { background: #085041; }
+.btn-green:disabled { background: #7db8ae; cursor: not-allowed; }
+input:disabled { background: #f5f5f5; color: #aaa; }
 .btn-outline { background: #fff; border: 1px solid #ddd; color: #333; }
 .btn-outline:hover { background: #f5f5f5; }
 .btn-red { background: #fff; border: 1px solid #f09595; color: #a32d2d; }
@@ -133,7 +135,7 @@ input:focus { border-color: #0f6e56; }
           <input type="url" id="inp-menulink" placeholder="ex: https://pizzahut.ro/meniu" />
         </div>
         <div class="actions">
-          <button class="btn btn-green btn-sm" onclick="startOrder()">Deschide comanda</button>
+          <button class="btn btn-green btn-sm" id="btn-start-new" onclick="startOrder()">Deschide comanda</button>
           <span class="saving-ind" id="saving-new"><span class="spinner" style="width:13px;height:13px;border-width:2px;margin-right:0"></span> Se salveaza...</span>
         </div>
       </div>
@@ -258,8 +260,8 @@ function makeCard(session) {
       <input type="text" id="i-${session.id}" placeholder="ex: Burger meniu mare" onkeydown="if(event.key==='Enter')addOrder('${session.id}')" />
     </div>
     <div class="actions">
-      <button class="btn btn-green btn-sm" onclick="addOrder('${session.id}')">Adauga</button>
-      <span class="saving-ind" id="saving-${session.id}"><span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:0"></span> Se salveaza...</span>
+      <button class="btn btn-green btn-sm" id="btn-add-${session.id}" onclick="addOrder('${session.id}')">Adauga comanda</button>
+      <span class="saving-ind" id="saving-${session.id}"><span class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:0"></span> Se trimite...</span>
     </div>
   </div>` : '';
 
@@ -322,7 +324,9 @@ async function startOrder() {
   const link = document.getElementById('inp-menulink').value.trim();
   if (!rest || !own) { alert('Completeaza restaurantul si numele tau.'); return; }
   if (saving['new']) return;
-  saving['new'] = true; setSaving('new', true);
+  saving['new'] = true;
+  const startBtn = document.getElementById('btn-start-new');
+  if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Se deschide...'; startBtn.style.opacity = '0.6'; }
   saveName(own);
   const sid = Date.now().toString();
   // GET proaspat — prinde orice sesiuni adaugate de altii
@@ -335,7 +339,9 @@ async function startOrder() {
   document.getElementById('inp-menulink').value = '';
   lastHash = ''; render();
   try { await putState(st); } catch(e) { alert('Eroare la salvare.'); }
-  setSaving('new', false); saving['new'] = false;
+  const sbtn = document.getElementById('btn-start-new');
+  if (sbtn) { sbtn.disabled = false; sbtn.textContent = 'Deschide comanda'; sbtn.style.opacity = '1'; }
+  saving['new'] = false;
 }
 
 async function addOrder(sid) {
@@ -344,19 +350,39 @@ async function addOrder(sid) {
   const pr = parseFloat(document.getElementById('p-'+sid)?.value);
   if (!n || !it || isNaN(pr) || pr < 0) { alert('Completeaza toate campurile.'); return; }
   if (saving[sid]) return;
-  saving[sid] = true; setSaving(sid, true);
+
+  // Dezactiveaza butonul SI campurile IMEDIAT - previne dubla trimitere
+  saving[sid] = true;
+  const btn = document.getElementById('btn-add-'+sid);
+  if (btn) { btn.disabled = true; btn.textContent = 'Se trimite...'; btn.style.opacity = '0.6'; }
+  const iEl = document.getElementById('i-'+sid);
+  const pEl = document.getElementById('p-'+sid);
+  const nEl = document.getElementById('n-'+sid);
+  if (iEl) iEl.disabled = true;
+  if (pEl) pEl.disabled = true;
+  if (nEl) nEl.disabled = true;
+
   saveName(n);
-  // GET proaspat — esential ca sa nu suprascriem sesiuni noi
-  const st = await freshGet();
-  const ses = st.sessions.find(s => s.id === sid);
-  if (!ses || ses.status !== 'open') { alert('Comanda nu mai este activa.'); loadState(); saving[sid]=false; return; }
-  ses.orders = ses.orders || [];
-  ses.orders.push({ id: Date.now().toString(), name: n, item: it, price: pr.toFixed(0), paid: false, ownerKey: myKey });
-  document.getElementById('i-'+sid).value = '';
-  document.getElementById('p-'+sid).value = '';
-  lastHash = ''; render();
-  try { await putState(st); } catch(e) { alert('Eroare.'); }
-  setSaving(sid, false); saving[sid] = false;
+  try {
+    const st = await freshGet();
+    const ses = st.sessions.find(s => s.id === sid);
+    if (!ses || ses.status !== 'open') { alert('Comanda nu mai este activa.'); loadState(); }
+    else {
+      ses.orders = ses.orders || [];
+      ses.orders.push({ id: Date.now().toString(), name: n, item: it, price: pr.toFixed(0), paid: false, ownerKey: myKey });
+      lastHash = ''; render();
+      await putState(st);
+    }
+  } catch(e) {
+    alert('Eroare la salvare. Incearca din nou.');
+    // Re-activeaza la eroare ca sa poata incerca din nou
+    if (btn) { btn.disabled = false; btn.textContent = 'Adauga comanda'; btn.style.opacity = '1'; }
+    if (iEl) { iEl.disabled = false; iEl.value = it || ''; }
+    if (pEl) { pEl.disabled = false; pEl.value = pr || ''; }
+    if (nEl) nEl.disabled = false;
+  }
+  saving[sid] = false;
+  // render() va reconstrui formularul curat
 }
 
 // Edit inline pentru orice user (nu doar organizator)
