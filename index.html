@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comanda mancare</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+  .topbar { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .app-icon { width: 32px; height: 32px; background: #0f6e56; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+  .app-title { font-size: 16px; font-weight: 600; }
+  .app-sub { font-size: 12px; color: #888; }
+  .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .badge-open { background: #e1f5ee; color: #0f6e56; }
+  .badge-closed { background: #f0f0f0; color: #888; }
+  .container { max-width: 640px; margin: 0 auto; padding: 20px 16px; }
+  .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 14px; }
+  label { font-size: 13px; color: #555; display: block; margin-bottom: 5px; }
+  input[type=text], input[type=number] { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; }
+  input:focus { border-color: #0f6e56; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .mb10 { margin-bottom: 10px; }
+  .btn { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; border: none; transition: opacity 0.15s, background 0.15s; }
+  .btn:active { opacity: 0.8; }
+  .btn-green { background: #0f6e56; color: #fff; }
+  .btn-green:hover { background: #085041; }
+  .btn-outline { background: #fff; border: 1px solid #ddd; color: #333; }
+  .btn-outline:hover { background: #f5f5f5; }
+  .btn-red { background: #fff; border: 1px solid #f09595; color: #a32d2d; }
+  .btn-red:hover { background: #fcebeb; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .metric { background: #f8f8f8; border-radius: 8px; padding: 12px; text-align: center; }
+  .metric-val { font-size: 22px; font-weight: 600; color: #1a1a1a; }
+  .metric-lbl { font-size: 11px; color: #888; margin-top: 3px; }
+  .order-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+  .order-row:last-child { border-bottom: none; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: #e1f5ee; color: #0f6e56; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .order-info { flex: 1; min-width: 0; }
+  .order-name { font-size: 14px; font-weight: 500; }
+  .order-item { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .order-price { font-size: 14px; font-weight: 600; color: #1a1a1a; min-width: 55px; text-align: right; }
+  .paid-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .paid-yes { background: #e1f5ee; color: #0f6e56; }
+  .paid-no { background: #f0f0f0; color: #888; }
+  .del-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 18px; line-height: 1; padding: 0 2px; }
+  .del-btn:hover { color: #e24b4a; }
+  .confirm-btn { font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; background: #fff; font-family: inherit; font-weight: 500; }
+  .confirm-btn:hover { background: #e1f5ee; border-color: #0f6e56; color: #0f6e56; }
+  .confirm-btn.confirmed { background: #e1f5ee; border-color: #0f6e56; color: #0f6e56; cursor: default; }
+  .empty { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
+  .divider { border: none; border-top: 1px solid #f0f0f0; margin: 14px 0; }
+  .info-box { background: #e1f5ee; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #085041; margin-bottom: 16px; }
+  .loading { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #ddd; border-top-color: #0f6e56; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box { background: #fcebeb; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #a32d2d; margin-bottom: 16px; }
+  .section-owner { border: 2px solid #0f6e56; }
+  .owner-tag { font-size: 11px; background: #0f6e56; color: #fff; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+  #view-new-order { display: none; }
+  #view-active { display: none; }
+  #view-closed { display: none; }
+  .restaurant-name { font-size: 20px; font-weight: 700; }
+  .opened-by { font-size: 13px; color: #888; margin-top: 2px; }
+  .summary-box { background: #f8f8f8; border-radius: 8px; padding: 16px; margin-top: 14px; }
+  .summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: #555; }
+  .summary-total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; padding-top: 10px; margin-top: 6px; border-top: 1px solid #e0e0e0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="app-icon">&#127829;</div>
+    <div>
+      <div class="app-title">Comanda mancare</div>
+      <div class="app-sub" id="topbar-sub">Se incarca...</div>
+    </div>
+  </div>
+  <span class="badge badge-closed" id="status-badge">&#9679; Inchis</span>
+</div>
+
+<div class="container">
+
+  <div id="loading-view" class="loading">
+    <span class="spinner"></span> Se incarca...
+  </div>
+
+  <div id="error-view" style="display:none">
+    <div class="error-box" id="error-msg">Eroare la incarcarea datelor.</div>
+    <button class="btn btn-outline" onclick="loadState()">Reincearca</button>
+  </div>
+
+  <!-- VIEW: nicio comanda activa -->
+  <div id="view-idle" style="display:none">
+    <div class="card">
+      <div class="card-title">Restaurant</div>
+      <div class="mb10">
+        <label>Numele restaurantului</label>
+        <input type="text" id="inp-restaurant" placeholder="ex: Pizza Hut, McDonald's..." />
+      </div>
+      <div class="mb10">
+        <label>Numele tau (cel care initiaza comanda)</label>
+        <input type="text" id="inp-owner" placeholder="ex: Razvan" />
+      </div>
+      <div class="actions">
+        <button class="btn btn-green" onclick="startOrder()">Deschide comanda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: comanda activa -->
+  <div id="view-active" style="display:none">
+    <div class="info-box" id="active-info"></div>
+
+    <div class="card">
+      <div class="card-title">Adauga comanda ta</div>
+      <div class="grid2">
+        <div>
+          <label>Numele tau</label>
+          <input type="text" id="inp-name" placeholder="ex: Ioana" />
+        </div>
+        <div>
+          <label>Pret (RON)</label>
+          <input type="number" id="inp-price" placeholder="ex: 35" min="0" step="1" />
+        </div>
+      </div>
+      <div class="mb10">
+        <label>Ce vrei sa comandezi</label>
+        <input type="text" id="inp-item" placeholder="ex: Burger meniu mare" />
+      </div>
+      <div class="actions">
+        <button class="btn btn-green" onclick="addOrder()">Adauga</button>
+      </div>
+    </div>
+
+    <div class="card section-owner" id="owner-card" style="display:none">
+      <div class="card-title">Gestionare comanda <span class="owner-tag">Organizator</span></div>
+      <div id="orders-list-owner"></div>
+      <div class="grid3" id="totals-owner" style="display:none">
+        <div class="metric"><div class="metric-val" id="t-count">0</div><div class="metric-lbl">persoane</div></div>
+        <div class="metric"><div class="metric-val" id="t-total">0</div><div class="metric-lbl">total RON</div></div>
+        <div class="metric"><div class="metric-val" id="t-avg">0</div><div class="metric-lbl">medie / pers</div></div>
+      </div>
+      <hr class="divider">
+      <div class="actions">
+        <button class="btn btn-red" onclick="closeOrder()">Inchide comanda</button>
+      </div>
+    </div>
+
+    <div class="card" id="orders-card-public">
+      <div class="card-title">Comenzi curente</div>
+      <div id="orders-list-public"></div>
+      <div class="grid3" id="totals-public" style="display:none">
+        <div class="metric"><div class="metric-val" id="p-count">0</div><div class="metric-lbl">persoane</div></div>
+        <div class="metric"><div class="metric-val" id="p-total">0</div><div class="metric-lbl">total RON</div></div>
+        <div class="metric"><div class="metric-val" id="p-avg">0</div><div class="metric-lbl">medie / pers</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: comanda inchisa -->
+  <div id="view-closed" style="display:none">
+    <div class="card">
+      <div class="restaurant-name" id="closed-restaurant"></div>
+      <div class="opened-by" id="closed-by"></div>
+      <div class="summary-box">
+        <div id="closed-orders-list"></div>
+        <div class="summary-total">
+          <span>Total</span>
+          <span id="closed-total"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card section-owner" id="owner-payment-card" style="display:none">
+      <div class="card-title">Confirmare plati <span class="owner-tag">Organizator</span></div>
+      <div id="payment-list"></div>
+      <hr class="divider">
+      <div class="actions">
+        <button class="btn btn-outline" onclick="resetOrder()">Comanda noua</button>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top: 10px;" id="public-reset-btn" style="display:none">
+      <button class="btn btn-outline" onclick="loadState()">Reincarca</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const MASTER_KEY = '$2a$10$2kMm5ORo2rd3sv6H7Sh70unZ0dvp.kRY8LkLTrx4mzmRRsAu0TYLa';
+const BIN_NAME = 'foodorder-ppc';
+let binId = localStorage.getItem('foodorder_bin_id') || null;
+let isOwner = false;
+let ownerName = '';
+let pollInterval = null;
+let lastHash = '';
+
+async function apiFetch(url, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': MASTER_KEY,
+      'X-Bin-Versioning': 'false'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error('API error ' + res.status);
+  return res.json();
+}
+
+async function getState() {
+  if (!binId) return null;
+  const data = await apiFetch(`https://api.jsonbin.io/v3/b/${binId}/latest`);
+  return data.record;
+}
+
+async function setState(state) {
+  if (!binId) {
+    const data = await apiFetch('https://api.jsonbin.io/v3/b', 'POST', state);
+    binId = data.metadata.id;
+    localStorage.setItem('foodorder_bin_id', binId);
+    return;
+  }
+  await apiFetch(`https://api.jsonbin.io/v3/b/${binId}`, 'PUT', state);
+}
+
+function emptyState() {
+  return { status: 'idle', restaurant: '', openedBy: '', orders: [], openedAt: null };
+}
+
+async function loadState() {
+  showView('loading');
+  try {
+    let state = await getState();
+    if (!state) state = emptyState();
+    renderState(state);
+  } catch(e) {
+    showView('error');
+    document.getElementById('error-msg').textContent = 'Eroare la incarcarea datelor. Verifica conexiunea.';
+  }
+}
+
+function renderState(state) {
+  const hash = JSON.stringify(state);
+  if (hash === lastHash) return;
+  lastHash = hash;
+
+  stopPolling();
+
+  if (state.status === 'idle') {
+    showView('idle');
+    document.getElementById('topbar-sub').textContent = 'Nicio comanda activa';
+    document.getElementById('status-badge').textContent = '\u25CF Inchis';
+    document.getElementById('status-badge').className = 'badge badge-closed';
+
+  } else if (state.status === 'open') {
+    showView('active');
+    document.getElementById('topbar-sub').textContent = state.restaurant;
+    document.getElementById('status-badge').textContent = '\u25CF Deschis';
+    document.getElementById('status-badge').className = 'badge badge-open';
+    document.getElementById('active-info').textContent =
+      'Comanda deschisa la ' + state.restaurant + ' de ' + state.openedBy + '. Adauga comanda ta mai jos.';
+
+    const ownerCard = document.getElementById('owner-card');
+    const publicCard = document.getElementById('orders-card-public');
+
+    if (isOwner && ownerName === state.openedBy) {
+      ownerCard.style.display = 'block';
+      publicCard.style.display = 'none';
+      renderOrdersOwner(state);
+    } else {
+      ownerCard.style.display = 'none';
+      publicCard.style.display = 'block';
+      renderOrdersPublic(state);
+    }
+    startPolling();
+
+  } else if (state.status === 'closed') {
+    showView('closed');
+    document.getElementById('topbar-sub').textContent = state.restaurant + ' — inchis';
+    document.getElementById('status-badge').textContent = '\u25CF Inchis';
+    document.getElementById('status-badge').className = 'badge badge-closed';
+    document.getElementById('closed-restaurant').textContent = state.restaurant;
+    document.getElementById('closed-by').textContent = 'Organizat de ' + state.openedBy;
+    renderClosedOrders(state);
+
+    if (isOwner && ownerName === state.openedBy) {
+      document.getElementById('owner-payment-card').style.display = 'block';
+      document.getElementById('public-reset-btn').style.display = 'none';
+      renderPaymentList(state);
+    } else {
+      document.getElementById('owner-payment-card').style.display = 'none';
+      document.getElementById('public-reset-btn').style.display = 'block';
+    }
+    startPolling();
+  }
+}
+
+function renderOrdersOwner(state) {
+  const list = document.getElementById('orders-list-owner');
+  const totals = document.getElementById('totals-owner');
+  if (!state.orders || state.orders.length === 0) {
+    list.innerHTML = '<div class="empty">Nicio comanda inca.</div>';
+    totals.style.display = 'none';
+    return;
+  }
+  totals.style.display = 'grid';
+  list.innerHTML = state.orders.map(o => `
+    <div class="order-row">
+      <div class="avatar">${initials(o.name)}</div>
+      <div class="order-info">
+        <div class="order-name">${o.name}</div>
+        <div class="order-item">${o.item}</div>
+      </div>
+      <div class="order-price">${o.price} RON</div>
+      <button class="del-btn" onclick="deleteOrder('${o.id}')" title="Sterge">&#215;</button>
+    </div>`).join('');
+  updateTotals(state.orders, 't-count', 't-total', 't-avg');
+}
+
+function renderOrdersPublic(state) {
+  const list = document.getElementById('orders-list-public');
+  const totals = document.getElementById('totals-public');
+  if (!state.orders || state.orders.length === 0) {
+    list.innerHTML = '<div class="empty">Nicio comanda inca. Fii primul!</div>';
+    totals.style.display = 'none';
+    return;
+  }
+  totals.style.display = 'grid';
+  list.innerHTML = state.orders.map(o => `
+    <div class="order-row">
+      <div class="avatar">${initials(o.name)}</div>
+      <div class="order-info">
+        <div class="order-name">${o.name}</div>
+        <div class="order-item">${o.item}</div>
+      </div>
+      <div class="order-price">${o.price} RON</div>
+    </div>`).join('');
+  updateTotals(state.orders, 'p-count', 'p-total', 'p-avg');
+}
+
+function renderClosedOrders(state) {
+  const list = document.getElementById('closed-orders-list');
+  const total = (state.orders||[]).reduce((s,o) => s + parseFloat(o.price||0), 0);
+  list.innerHTML = (state.orders||[]).map(o => `
+    <div class="summary-row">
+      <span>${o.name} — ${o.item}</span>
+      <span>${o.price} RON</span>
+    </div>`).join('');
+  document.getElementById('closed-total').textContent = total.toFixed(0) + ' RON';
+}
+
+function renderPaymentList(state) {
+  const list = document.getElementById('payment-list');
+  if (!state.orders || state.orders.length === 0) {
+    list.innerHTML = '<div class="empty">Nicio comanda.</div>';
+    return;
+  }
+  list.innerHTML = state.orders.map(o => `
+    <div class="order-row">
+      <div class="avatar">${initials(o.name)}</div>
+      <div class="order-info">
+        <div class="order-name">${o.name}</div>
+        <div class="order-item">${o.item} — ${o.price} RON</div>
+      </div>
+      <button class="confirm-btn ${o.paid ? 'confirmed' : ''}" onclick="togglePaid('${o.id}')" ${o.paid ? 'disabled' : ''}>
+        ${o.paid ? '&#10003; Platit' : 'Confirma plata'}
+      </button>
+    </div>`).join('');
+}
+
+function updateTotals(orders, cId, tId, aId) {
+  const total = orders.reduce((s,o) => s + parseFloat(o.price||0), 0);
+  document.getElementById(cId).textContent = orders.length;
+  document.getElementById(tId).textContent = total.toFixed(0);
+  document.getElementById(aId).textContent = (total / orders.length).toFixed(0);
+}
+
+function initials(name) {
+  return (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+
+async function startOrder() {
+  const restaurant = document.getElementById('inp-restaurant').value.trim();
+  const owner = document.getElementById('inp-owner').value.trim();
+  if (!restaurant || !owner) { alert('Completeaza restaurantul si numele tau.'); return; }
+  isOwner = true;
+  ownerName = owner;
+  localStorage.setItem('foodorder_owner', owner);
+  const state = { status: 'open', restaurant, openedBy: owner, openedAt: new Date().toISOString(), orders: [] };
+  try {
+    await setState(state);
+    renderState(state);
+  } catch(e) { alert('Eroare la salvare. Incearca din nou.'); }
+}
+
+async function addOrder() {
+  const name = document.getElementById('inp-name').value.trim();
+  const item = document.getElementById('inp-item').value.trim();
+  const price = parseFloat(document.getElementById('inp-price').value);
+  if (!name || !item || isNaN(price) || price < 0) { alert('Completeaza toate campurile.'); return; }
+  try {
+    let state = await getState();
+    if (!state || state.status !== 'open') { alert('Comanda nu mai este activa.'); loadState(); return; }
+    state.orders = state.orders || [];
+    state.orders.push({ id: Date.now().toString(), name, item, price: price.toFixed(0), paid: false });
+    await setState(state);
+    document.getElementById('inp-name').value = '';
+    document.getElementById('inp-item').value = '';
+    document.getElementById('inp-price').value = '';
+    lastHash = '';
+    renderState(state);
+  } catch(e) { alert('Eroare la salvare. Incearca din nou.'); }
+}
+
+async function deleteOrder(id) {
+  if (!confirm('Stergi aceasta comanda?')) return;
+  try {
+    let state = await getState();
+    state.orders = (state.orders||[]).filter(o => o.id !== id);
+    await setState(state);
+    lastHash = '';
+    renderState(state);
+  } catch(e) { alert('Eroare. Incearca din nou.'); }
+}
+
+async function closeOrder() {
+  if (!confirm('Inchizi comanda? Colegii nu mai pot adauga comenzi.')) return;
+  try {
+    let state = await getState();
+    state.status = 'closed';
+    await setState(state);
+    lastHash = '';
+    renderState(state);
+  } catch(e) { alert('Eroare. Incearca din nou.'); }
+}
+
+async function togglePaid(id) {
+  try {
+    let state = await getState();
+    const order = state.orders.find(o => o.id === id);
+    if (order) order.paid = true;
+    await setState(state);
+    lastHash = '';
+    renderState(state);
+  } catch(e) { alert('Eroare. Incearca din nou.'); }
+}
+
+async function resetOrder() {
+  if (!confirm('Resetezi? Toate datele comenzii curente vor fi sterse.')) return;
+  isOwner = false;
+  ownerName = '';
+  localStorage.removeItem('foodorder_owner');
+  const state = emptyState();
+  try {
+    await setState(state);
+    lastHash = '';
+    renderState(state);
+  } catch(e) { alert('Eroare. Incearca din nou.'); }
+}
+
+function showView(v) {
+  document.getElementById('loading-view').style.display = v === 'loading' ? 'block' : 'none';
+  document.getElementById('error-view').style.display = v === 'error' ? 'block' : 'none';
+  document.getElementById('view-idle').style.display = v === 'idle' ? 'block' : 'none';
+  document.getElementById('view-active').style.display = v === 'active' ? 'block' : 'none';
+  document.getElementById('view-closed').style.display = v === 'closed' ? 'block' : 'none';
+}
+
+function startPolling() {
+  if (pollInterval) return;
+  pollInterval = setInterval(async () => {
+    try {
+      const state = await getState();
+      if (state) renderState(state);
+    } catch(e) {}
+  }, 5000);
+}
+
+function stopPolling() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+// Recunoaste organizatorul daca s-a mai logat
+const savedOwner = localStorage.getItem('foodorder_owner');
+if (savedOwner) { isOwner = true; ownerName = savedOwner; }
+
+loadState();
+</script>
+</body>
+</html>
