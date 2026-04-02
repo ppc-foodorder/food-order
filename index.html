@@ -153,6 +153,9 @@ let pollInterval = null;
 let saving = {};
 let myName = localStorage.getItem('fo_name') || '';
 let ownedIds = JSON.parse(localStorage.getItem('fo_owned') || '[]');
+// Cheie unica per browser - identifica userul fara login
+let myKey = localStorage.getItem('fo_key');
+if (!myKey) { myKey = Date.now().toString(36) + Math.random().toString(36).slice(2); localStorage.setItem('fo_key', myKey); }
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) loadState();
@@ -233,7 +236,7 @@ function makeCard(session) {
       <div class="avatar">${ini(o.name)}</div>
       <div class="order-info"><div class="order-name">${esc(o.name)}</div><div class="order-item-txt">${esc(o.item)}</div></div>
       <div class="order-price">${o.price} RON</div>
-      ${open ? `
+      ${open && (o.ownerKey === myKey || owned) ? `
         <button class="icon-btn edit-btn" onclick="startEditOrder('${session.id}','${o.id}')" title="Editeaza">&#9998;</button>
         <button class="icon-btn del-btn2" onclick="delOrder('${session.id}','${o.id}')" title="Sterge">&#215;</button>
       ` : ''}
@@ -249,9 +252,9 @@ function makeCard(session) {
     <div class="add-form-title">Adauga comanda ta</div>
     <div class="grid2">
       <div><label>Numele tau</label><input type="text" id="n-${session.id}" placeholder="ex: Ioana" value="${esc(myName)}" oninput="saveName(this.value)" /></div>
-      <div><label>Pret (RON)</label><input type="number" id="p-${session.id}" placeholder="ex: 35" min="0" step="1" /></div>
+      <div><label>Pret (RON) <span style="font-size:10px;color:#b36200;font-weight:500" title="Include transport, ambalaj etc.">&#9888; incl. extras</span></label><input type="number" id="p-${session.id}" placeholder="ex: 35" min="0" step="1" /></div>
     </div>
-    <div class="mb10"><label>Ce vrei sa comandezi</label>
+    <div class="mb10"><label>Ce vrei sa comanzi</label>
       <input type="text" id="i-${session.id}" placeholder="ex: Burger meniu mare" onkeydown="if(event.key==='Enter')addOrder('${session.id}')" />
     </div>
     <div class="actions">
@@ -280,6 +283,14 @@ function makeCard(session) {
         <div class="owner-label">&#9679; Confirmare plati</div>
         ${payRows}
         <div class="summary-box">${sumRows}<div class="summary-total"><span>Total</span><span>${total.toFixed(0)} RON</span></div></div>
+        <div style="margin-top:14px">
+          <div class="owner-label" style="margin-bottom:8px">&#128247; Poza bon / confirmare <span style="font-size:11px;color:#888;font-weight:400">(optional)</span></div>
+          ${session.bonusPhoto ? `<div style="margin-bottom:10px"><img src="${session.bonusPhoto}" style="max-width:100%;border-radius:8px;border:1px solid #e8e8e8" /></div>` : ''}
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#185fa5;background:#e6f1fb;border:1px solid #b5d4f4;padding:6px 14px;border-radius:8px">
+            &#128247; ${session.bonusPhoto ? 'Schimba poza' : 'Adauga poza'}
+            <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto('${session.id}', this)" />
+          </label>
+        </div>
         <div class="actions"><button class="btn btn-outline btn-sm" onclick="removeSession('${session.id}')">Arhiveaza / Sterge</button></div>
       </div>`;
     }
@@ -340,7 +351,7 @@ async function addOrder(sid) {
   const ses = st.sessions.find(s => s.id === sid);
   if (!ses || ses.status !== 'open') { alert('Comanda nu mai este activa.'); loadState(); saving[sid]=false; return; }
   ses.orders = ses.orders || [];
-  ses.orders.push({ id: Date.now().toString(), name: n, item: it, price: pr.toFixed(0), paid: false });
+  ses.orders.push({ id: Date.now().toString(), name: n, item: it, price: pr.toFixed(0), paid: false, ownerKey: myKey });
   document.getElementById('i-'+sid).value = '';
   document.getElementById('p-'+sid).value = '';
   lastHash = ''; render();
@@ -432,6 +443,21 @@ async function removeSession(sid) {
   lastHash = ''; render();
   try { await putState(st); } catch(e) { alert('Eroare.'); }
   saving[sid] = false;
+}
+
+async function uploadPhoto(sid, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { alert('Poza prea mare. Maxim 2MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const st = await freshGet();
+    const ses = st.sessions.find(s => s.id === sid);
+    if (ses) ses.bonusPhoto = e.target.result;
+    lastHash = ''; render();
+    try { await putState(st); } catch(err) { alert('Eroare la salvare poza.'); }
+  };
+  reader.readAsDataURL(file);
 }
 
 function saveName(n) { if (n) { myName = n; localStorage.setItem('fo_name', n); } }
