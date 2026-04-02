@@ -265,6 +265,15 @@ function makeCard(session) {
     </div>
   </div>` : '';
 
+  // Buton stergere vizibil pentru toti pe sesiuni inchise (nu doar owner)
+  // Util cand owner-ul a pierdut localStorage (cache sters, alt browser etc.)
+  let publicDeleteHtml = '';
+  if (!open && !owned) {
+    publicDeleteHtml = `<div style="padding:12px 18px;border-top:1px solid #f0f0f0;text-align:right">
+      <button class="btn btn-outline btn-sm" style="font-size:12px;color:#aaa;border-color:#eee" onclick="removeSessionPublic('${session.id}')">Sterge comanda</button>
+    </div>`;
+  }
+
   let ownerHtml = '';
   if (owned) {
     if (open) {
@@ -307,7 +316,7 @@ function makeCard(session) {
       <span class="status-pill ${open?'pill-open':'pill-closed'}">${open?'&#9679; Deschis':'&#9679; Inchis'}</span>
     </div>
     <div class="order-card-body">${orderRowsHtml}${metricsHtml}${addFormHtml}</div>
-    ${ownerHtml}`;
+    ${ownerHtml}${publicDeleteHtml}`;
   return div;
 }
 
@@ -466,6 +475,12 @@ async function togglePaid(sid, oid) {
   lastHash = ''; render();
   try { await putState(localState); } catch(e) { alert('Eroare.'); }
   saving[sid] = false;
+}
+
+async function removeSessionPublic(sid) {
+  const pw = prompt('Introdu parola aplicatiei pentru a sterge aceasta comanda:');
+  if (pw !== APP_PASSWORD) { if (pw !== null) alert('Parola incorecta.'); return; }
+  await removeSession(sid);
 }
 
 async function removeSession(sid) {
