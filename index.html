@@ -61,6 +61,11 @@ input:focus { border-color: #0f6e56; }
 .order-price { font-size: 13px; font-weight: 700; min-width: 54px; text-align: right; }
 .del-btn { background: none; border: none; cursor: pointer; color: #ddd; font-size: 18px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
 .del-btn:hover { color: #e24b4a; }
+.icon-btn { background: none; border: 1px solid transparent; border-radius: 5px; cursor: pointer; font-size: 14px; line-height: 1; padding: 3px 5px; flex-shrink: 0; transition: all 0.1s; }
+.edit-btn { color: #aaa; }
+.edit-btn:hover { color: #185fa5; border-color: #b5d4f4; background: #e6f1fb; }
+.del-btn2 { color: #ccc; }
+.del-btn2:hover { color: #a32d2d; border-color: #f09595; background: #fcebeb; }
 .confirm-btn { font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; background: #fff; font-family: inherit; font-weight: 500; white-space: nowrap; }
 .confirm-btn:hover { background: #e1f5ee; border-color: #0f6e56; color: #0f6e56; }
 .confirm-btn.confirmed { background: #e1f5ee; border-color: #9FE1CB; color: #0f6e56; cursor: default; }
@@ -224,11 +229,14 @@ function makeCard(session) {
     ? `<a href="${esc(session.menuLink)}" target="_blank" class="menu-link">&#128279; Vezi meniu</a>` : '';
 
   let orderRowsHtml = orders.length ? orders.map(o => `
-    <div class="order-row">
+    <div class="order-row" id="row-${o.id}">
       <div class="avatar">${ini(o.name)}</div>
       <div class="order-info"><div class="order-name">${esc(o.name)}</div><div class="order-item-txt">${esc(o.item)}</div></div>
       <div class="order-price">${o.price} RON</div>
-      ${owned && open ? `<button class="del-btn" onclick="delOrder('${session.id}','${o.id}')">&#215;</button>` : ''}
+      ${open ? `
+        <button class="icon-btn edit-btn" onclick="startEditOrder('${session.id}','${o.id}')" title="Editeaza">&#9998;</button>
+        <button class="icon-btn del-btn2" onclick="delOrder('${session.id}','${o.id}')" title="Sterge">&#215;</button>
+      ` : ''}
     </div>`).join('') : '<div class="empty">Nicio comanda inca.</div>';
 
   const metricsHtml = orders.length ? `<div class="grid3">
@@ -290,6 +298,13 @@ function makeCard(session) {
   return div;
 }
 
+// FIX RACE CONDITION: toate actiunile fac GET proaspat inainte de PUT
+// astfel nu se suprascriu date adaugate de alti useri intre timp
+async function freshGet() {
+  // Intotdeauna citim cea mai recenta versiune de pe server inainte de orice modificare
+  return await getState();
+}
+
 async function startOrder() {
   const rest = document.getElementById('inp-restaurant').value.trim();
   const own = document.getElementById('inp-owner').value.trim();
@@ -299,7 +314,8 @@ async function startOrder() {
   saving['new'] = true; setSaving('new', true);
   saveName(own);
   const sid = Date.now().toString();
-  const st = localState || { sessions: [] };
+  // GET proaspat — prinde orice sesiuni adaugate de altii
+  const st = await freshGet();
   st.sessions = st.sessions || [];
   st.sessions.push({ id: sid, restaurant: rest, openedBy: own, menuLink: link || null, openedAt: new Date().toISOString(), status: 'open', orders: [] });
   ownedIds.push(sid);
@@ -319,7 +335,8 @@ async function addOrder(sid) {
   if (saving[sid]) return;
   saving[sid] = true; setSaving(sid, true);
   saveName(n);
-  const st = localState || await getState();
+  // GET proaspat — esential ca sa nu suprascriem sesiuni noi
+  const st = await freshGet();
   const ses = st.sessions.find(s => s.id === sid);
   if (!ses || ses.status !== 'open') { alert('Comanda nu mai este activa.'); loadState(); saving[sid]=false; return; }
   ses.orders = ses.orders || [];
@@ -331,11 +348,49 @@ async function addOrder(sid) {
   setSaving(sid, false); saving[sid] = false;
 }
 
+// Edit inline pentru orice user (nu doar organizator)
+function startEditOrder(sid, oid) {
+  const ses = (localState.sessions||[]).find(s => s.id === sid);
+  if (!ses) return;
+  const o = (ses.orders||[]).find(o => o.id === oid);
+  if (!o) return;
+  const row = document.getElementById('row-'+oid);
+  if (!row) return;
+  row.innerHTML = `
+    <div class="avatar">${ini(o.name)}</div>
+    <div class="order-info" style="flex:1">
+      <input type="text" id="edit-item-${oid}" value="${esc(o.item)}" style="margin-bottom:4px" />
+      <input type="number" id="edit-price-${oid}" value="${o.price}" min="0" step="1" style="max-width:100px" />
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <button class="btn btn-green btn-sm" style="padding:5px 10px" onclick="saveEditOrder('${sid}','${oid}')">&#10003;</button>
+      <button class="btn btn-outline btn-sm" style="padding:5px 10px" onclick="cancelEdit('${sid}','${oid}')">&#215;</button>
+    </div>`;
+}
+
+async function saveEditOrder(sid, oid) {
+  const newItem = document.getElementById('edit-item-'+oid)?.value.trim();
+  const newPrice = parseFloat(document.getElementById('edit-price-'+oid)?.value);
+  if (!newItem || isNaN(newPrice) || newPrice < 0) { alert('Completeaza campurile corect.'); return; }
+  if (saving[sid]) return;
+  saving[sid] = true;
+  const st = await freshGet();
+  const ses = st.sessions.find(s => s.id === sid);
+  if (ses) { const o = ses.orders.find(o => o.id === oid); if (o) { o.item = newItem; o.price = newPrice.toFixed(0); } }
+  lastHash = ''; render();
+  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  saving[sid] = false;
+}
+
+function cancelEdit(sid, oid) {
+  lastHash = ''; render();
+}
+
 async function delOrder(sid, oid) {
   if (!confirm('Stergi aceasta comanda?')) return;
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = localState || await getState();
+  const st = await freshGet();
   const ses = st.sessions.find(s => s.id === sid);
   if (ses) ses.orders = ses.orders.filter(o => o.id !== oid);
   lastHash = ''; render();
@@ -347,7 +402,7 @@ async function closeSession(sid) {
   if (!confirm('Inchizi comanda? Colegii nu mai pot adauga comenzi.')) return;
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = localState || await getState();
+  const st = await freshGet();
   const ses = st.sessions.find(s => s.id === sid);
   if (ses) ses.status = 'closed';
   lastHash = ''; render();
@@ -358,7 +413,7 @@ async function closeSession(sid) {
 async function togglePaid(sid, oid) {
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = localState || await getState();
+  const st = await freshGet();
   const ses = st.sessions.find(s => s.id === sid);
   if (ses) { const o = ses.orders.find(o => o.id === oid); if (o) o.paid = true; }
   lastHash = ''; render();
@@ -370,7 +425,7 @@ async function removeSession(sid) {
   if (!confirm('Arhivezi si stergi aceasta comanda? Nu va mai fi vizibila.')) return;
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = localState || await getState();
+  const st = await freshGet();
   st.sessions = st.sessions.filter(s => s.id !== sid);
   ownedIds = ownedIds.filter(id => id !== sid);
   localStorage.setItem('fo_owned', JSON.stringify(ownedIds));
