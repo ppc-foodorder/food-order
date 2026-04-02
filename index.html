@@ -254,7 +254,7 @@ function makeCard(session) {
     <div class="add-form-title">Adauga comanda ta</div>
     <div class="grid2">
       <div><label>Numele tau</label><input type="text" id="n-${session.id}" placeholder="ex: Ioana" value="${esc(myName)}" oninput="saveName(this.value)" /></div>
-      <div><label>Pret (RON) <span style="font-size:10px;color:#b36200;font-weight:500" title="Include transport, ambalaj etc.">&#9888; incl. extras</span></label><input type="number" id="p-${session.id}" placeholder="ex: 35" min="0" step="1" /></div>
+      <div><label>Pret (RON) <span style="font-size:10px;color:#b36200;font-weight:500" >&#128075; nu uita transportul/ambalajul</span></label><input type="number" id="p-${session.id}" placeholder="ex: 35" min="0" step="1" /></div>
     </div>
     <div class="mb10"><label>Ce vrei sa comanzi</label>
       <input type="text" id="i-${session.id}" placeholder="ex: Burger meniu mare" onkeydown="if(event.key==='Enter')addOrder('${session.id}')" />
@@ -314,8 +314,14 @@ function makeCard(session) {
 // FIX RACE CONDITION: toate actiunile fac GET proaspat inainte de PUT
 // astfel nu se suprascriu date adaugate de alti useri intre timp
 async function freshGet() {
-  // Intotdeauna citim cea mai recenta versiune de pe server inainte de orice modificare
   return await getState();
+}
+
+// GET care returneaza starea de pe server fara sa suprascrie localState
+// Folosit in addOrder ca sa nu cauzam render intermediar cu stare veche
+async function getStateNoRender() {
+  const d = await apiFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`);
+  return d.record || { sessions: [] };
 }
 
 async function startOrder() {
@@ -329,16 +335,16 @@ async function startOrder() {
   if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Se deschide...'; startBtn.style.opacity = '0.6'; }
   saveName(own);
   const sid = Date.now().toString();
-  // GET proaspat — prinde orice sesiuni adaugate de altii
-  const st = await freshGet();
-  st.sessions = st.sessions || [];
-  st.sessions.push({ id: sid, restaurant: rest, openedBy: own, menuLink: link || null, openedAt: new Date().toISOString(), status: 'open', orders: [] });
+  // Adauga sesiunea in localState si arata imediat, fara sa asteptam GET
+  if (!localState) localState = { sessions: [] };
+  localState.sessions = localState.sessions || [];
+  localState.sessions.push({ id: sid, restaurant: rest, openedBy: own, menuLink: link || null, openedAt: new Date().toISOString(), status: 'open', orders: [] });
   ownedIds.push(sid);
   localStorage.setItem('fo_owned', JSON.stringify(ownedIds));
   document.getElementById('inp-restaurant').value = '';
   document.getElementById('inp-menulink').value = '';
   lastHash = ''; render();
-  try { await putState(st); } catch(e) { alert('Eroare la salvare.'); }
+  try { await putState(localState); } catch(e) { alert('Eroare la salvare.'); }
   const sbtn = document.getElementById('btn-start-new');
   if (sbtn) { sbtn.disabled = false; sbtn.textContent = 'Deschide comanda'; sbtn.style.opacity = '1'; }
   saving['new'] = false;
@@ -351,38 +357,42 @@ async function addOrder(sid) {
   if (!n || !it || isNaN(pr) || pr < 0) { alert('Completeaza toate campurile.'); return; }
   if (saving[sid]) return;
 
-  // Dezactiveaza butonul SI campurile IMEDIAT - previne dubla trimitere
   saving[sid] = true;
   const btn = document.getElementById('btn-add-'+sid);
   if (btn) { btn.disabled = true; btn.textContent = 'Se trimite...'; btn.style.opacity = '0.6'; }
-  const iEl = document.getElementById('i-'+sid);
-  const pEl = document.getElementById('p-'+sid);
-  const nEl = document.getElementById('n-'+sid);
-  if (iEl) iEl.disabled = true;
-  if (pEl) pEl.disabled = true;
-  if (nEl) nEl.disabled = true;
-
+  ['i-','p-','n-'].forEach(p => { const el = document.getElementById(p+sid); if (el) el.disabled = true; });
   saveName(n);
-  try {
-    const st = await freshGet();
-    const ses = st.sessions.find(s => s.id === sid);
-    if (!ses || ses.status !== 'open') { alert('Comanda nu mai este activa.'); loadState(); }
-    else {
-      ses.orders = ses.orders || [];
-      ses.orders.push({ id: Date.now().toString(), name: n, item: it, price: pr.toFixed(0), paid: false, ownerKey: myKey });
-      lastHash = ''; render();
-      await putState(st);
-    }
-  } catch(e) {
-    alert('Eroare la salvare. Incearca din nou.');
-    // Re-activeaza la eroare ca sa poata incerca din nou
+
+  // STEP 1: Adauga comanda in localState si afiseaza IMEDIAT - nu se mai misca de aici
+  const newOrder = { id: Date.now().toString(), name: n, item: it, price: pr.toFixed(0), paid: false, ownerKey: myKey };
+  if (!localState) localState = { sessions: [] };
+  const sesLocal = (localState.sessions||[]).find(s => s.id === sid);
+  if (!sesLocal || sesLocal.status !== 'open') {
+    alert('Comanda nu mai este activa.');
+    saving[sid] = false;
     if (btn) { btn.disabled = false; btn.textContent = 'Adauga comanda'; btn.style.opacity = '1'; }
-    if (iEl) { iEl.disabled = false; iEl.value = it || ''; }
-    if (pEl) { pEl.disabled = false; pEl.value = pr || ''; }
-    if (nEl) nEl.disabled = false;
+    ['i-','p-','n-'].forEach(p => { const el = document.getElementById(p+sid); if (el) el.disabled = false; });
+    return;
+  }
+  sesLocal.orders = sesLocal.orders || [];
+  sesLocal.orders.push(newOrder);
+  lastHash = ''; render(); // Apare imediat, NU mai dispare
+
+  // STEP 2: Trimite la server in background - UI-ul NU se mai schimba indiferent ce se intampla
+  try {
+    await putState(localState);
+    // Succes - nimic de facut, comanda e deja vizibila
+  } catch(e) {
+    // Eroare retea - comanda ramane vizibila local dar avertizam
+    alert('Eroare la salvare. Verifica conexiunea - comanda poate nu a fost salvata pe server.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Adauga comanda'; btn.style.opacity = '1'; }
+    ['i-','p-','n-'].forEach(p => { const el = document.getElementById(p+sid); if (el) el.disabled = false; });
+    const iEl = document.getElementById('i-'+sid);
+    const pEl = document.getElementById('p-'+sid);
+    if (iEl) iEl.value = it;
+    if (pEl) pEl.value = pr;
   }
   saving[sid] = false;
-  // render() va reconstrui formularul curat
 }
 
 // Edit inline pentru orice user (nu doar organizator)
@@ -411,11 +421,11 @@ async function saveEditOrder(sid, oid) {
   if (!newItem || isNaN(newPrice) || newPrice < 0) { alert('Completeaza campurile corect.'); return; }
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = await freshGet();
-  const ses = st.sessions.find(s => s.id === sid);
+  if (!localState) return;
+  const ses = (localState.sessions||[]).find(s => s.id === sid);
   if (ses) { const o = ses.orders.find(o => o.id === oid); if (o) { o.item = newItem; o.price = newPrice.toFixed(0); } }
   lastHash = ''; render();
-  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  try { await putState(localState); } catch(e) { alert('Eroare.'); }
   saving[sid] = false;
 }
 
@@ -427,11 +437,11 @@ async function delOrder(sid, oid) {
   if (!confirm('Stergi aceasta comanda?')) return;
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = await freshGet();
-  const ses = st.sessions.find(s => s.id === sid);
+  if (!localState) return;
+  const ses = (localState.sessions||[]).find(s => s.id === sid);
   if (ses) ses.orders = ses.orders.filter(o => o.id !== oid);
   lastHash = ''; render();
-  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  try { await putState(localState); } catch(e) { alert('Eroare.'); }
   saving[sid] = false;
 }
 
@@ -439,22 +449,22 @@ async function closeSession(sid) {
   if (!confirm('Inchizi comanda? Colegii nu mai pot adauga comenzi.')) return;
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = await freshGet();
-  const ses = st.sessions.find(s => s.id === sid);
+  if (!localState) return;
+  const ses = (localState.sessions||[]).find(s => s.id === sid);
   if (ses) ses.status = 'closed';
   lastHash = ''; render();
-  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  try { await putState(localState); } catch(e) { alert('Eroare.'); }
   saving[sid] = false;
 }
 
 async function togglePaid(sid, oid) {
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = await freshGet();
-  const ses = st.sessions.find(s => s.id === sid);
+  if (!localState) return;
+  const ses = (localState.sessions||[]).find(s => s.id === sid);
   if (ses) { const o = ses.orders.find(o => o.id === oid); if (o) o.paid = true; }
   lastHash = ''; render();
-  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  try { await putState(localState); } catch(e) { alert('Eroare.'); }
   saving[sid] = false;
 }
 
@@ -462,12 +472,12 @@ async function removeSession(sid) {
   if (!confirm('Arhivezi si stergi aceasta comanda? Nu va mai fi vizibila.')) return;
   if (saving[sid]) return;
   saving[sid] = true;
-  const st = await freshGet();
-  st.sessions = st.sessions.filter(s => s.id !== sid);
+  if (!localState) return;
+  localState.sessions = localState.sessions.filter(s => s.id !== sid);
   ownedIds = ownedIds.filter(id => id !== sid);
   localStorage.setItem('fo_owned', JSON.stringify(ownedIds));
   lastHash = ''; render();
-  try { await putState(st); } catch(e) { alert('Eroare.'); }
+  try { await putState(localState); } catch(e) { alert('Eroare.'); }
   saving[sid] = false;
 }
 
