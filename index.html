@@ -320,7 +320,7 @@ async function freshGet() {
 // GET care returneaza starea de pe server fara sa suprascrie localState
 // Folosit in addOrder ca sa nu cauzam render intermediar cu stare veche
 async function getStateNoRender() {
-  const d = await apiFetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`);
+  const d = await api(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`);
   return d.record || { sessions: [] };
 }
 
